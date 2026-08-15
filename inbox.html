@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox — NexusTech CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --accent: #0F6B66;
+        --accent-dark: #0B4F4B;
+        --accent-soft: #E4F2F1;
+        --bg: #F6F7F8;
+        --panel: #FFFFFF;
+        --border: #E4E6EA;
+        --text: #1B1F23;
+        --text-muted: #6B7280;
+        --text-faint: #9CA3AF;
+        --danger: #DC2626;
+        --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    .app {
+        display: grid;
+        grid-template-columns: 72px 340px 1fr 300px;
+        height: 100vh;
+    }
+
+    /* ---------- Sidebar de navegação de canais ---------- */
+    .nav {
+        background: var(--accent-dark);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 0;
+        gap: 6px;
+    }
+    .nav-logo {
+        width: 36px; height: 36px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px;
+        margin-bottom: 20px;
+        letter-spacing: -0.5px;
+    }
+    .nav-item {
+        width: 48px; height: 48px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,0.55);
+        cursor: pointer;
+        font-size: 19px;
+        transition: background .15s, color .15s;
+        position: relative;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: var(--accent); color: white; }
+    .nav-item .badge {
+        position: absolute; top: 2px; right: 2px;
+        background: #E85D4E; color: white;
+        font-size: 9px; font-weight: 700;
+        min-width: 15px; height: 15px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0 3px;
+    }
+
+    /* ---------- Lista de conversas ---------- */
+    .conv-list {
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: flex; flex-direction: column;
+        overflow: hidden;
+    }
+    .conv-list-header {
+        padding: 18px 16px 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .conv-list-header h1 { font-size: 16px; margin: 0 0 2px; font-weight: 700; }
+    .conv-list-header .count { font-size: 12px; color: var(--text-faint); }
+    .search-box {
+        margin-top: 12px;
+        position: relative;
+    }
+    .search-box input {
+        width: 100%;
+        padding: 8px 10px 8px 32px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        background: var(--bg);
+        color: var(--text);
+        outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box::before {
+        content: "⌕";
+        position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+        color: var(--text-faint); font-size: 15px;
+    }
+    .filter-tabs {
+        display: flex; gap: 4px; padding: 10px 16px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .filter-tab {
+        padding: 6px 10px; font-size: 12px; font-weight: 600;
+        color: var(--text-muted); cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+    }
+    .filter-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .conv-items { flex: 1; overflow-y: auto; }
+    .conv-item {
+        display: flex; gap: 10px;
+        padding: 12px 16px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        border-bottom: 1px solid #F0F1F3;
+    }
+    .conv-item:hover { background: #FAFBFC; }
+    .conv-item.selected { background: var(--accent-soft); border-left-color: var(--accent); }
+    .avatar {
+        width: 38px; height: 38px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), #1B8F88);
+        color: white; font-weight: 700; font-size: 13px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .conv-item-body { flex: 1; min-width: 0; }
+    .conv-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .conv-item-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-item-time { font-size: 10.5px; color: var(--text-faint); flex-shrink: 0; }
+    .conv-item-preview {
+        font-size: 12.5px; color: var(--text-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-top: 2px;
+    }
+    .conv-item-preview b { color: var(--text); font-weight: 600; }
+    .conv-item-footer { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+    .tag-pill {
+        font-size: 10px; font-weight: 600; padding: 2px 8px;
+        border-radius: 20px; border: 1px solid; white-space: nowrap;
+    }
+    .channel-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .unread-dot {
+        background: var(--accent); color: white; font-size: 10px; font-weight: 700;
+        min-width: 17px; height: 17px; border-radius: 9px;
+        display: flex; align-items: center; justify-content: center; margin-left: auto;
+    }
+
+    /* ---------- Painel de chat ---------- */
+    .chat-panel { display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+    .chat-header {
+        background: var(--panel); border-bottom: 1px solid var(--border);
+        padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+    }
+    .chat-header-name { font-weight: 700; font-size: 14.5px; }
+    .chat-header-sub { font-size: 11.5px; color: var(--text-faint); }
+    .chat-header-actions { margin-left: auto; display: flex; gap: 8px; }
+    .icon-btn {
+        width: 32px; height: 32px; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--panel);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; color: var(--text-muted); font-size: 14px;
+    }
+    .icon-btn:hover { background: var(--bg); }
+
+    .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .msg-row { display: flex; }
+    .msg-row.outbound { justify-content: flex-end; }
+    .msg-bubble {
+        max-width: 60%; padding: 9px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.45;
+        position: relative;
+    }
+    .msg-row.inbound .msg-bubble { background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+    .msg-row.outbound .msg-bubble { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
+    .msg-meta { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+    .msg-row.outbound .msg-meta { text-align: right; }
+
+    .composer { background: var(--panel); border-top: 1px solid var(--border); padding: 12px 16px; display: flex; gap: 10px; align-items: flex-end; }
+    .composer textarea {
+        flex: 1; resize: none; border: 1px solid var(--border); border-radius: 10px;
+        padding: 10px 12px; font-family: inherit; font-size: 13.5px; outline: none;
+        max-height: 100px;
+    }
+    .composer textarea:focus { border-color: var(--accent); }
+    .send-btn {
+        background: var(--accent); color: white; border: none; border-radius: 10px;
+        padding: 10px 18px; font-weight: 600; font-size: 13px; cursor: pointer;
+    }
+    .send-btn:hover { background: var(--accent-dark); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .empty-state {
+        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: var(--text-faint); gap: 8px;
+    }
+    .empty-state .glyph { font-size: 40px; }
+
+    /* ---------- Painel de contato ---------- */
+    .contact-panel {
+        background: var(--panel); border-left: 1px solid var(--border);
+        padding: 24px 18px; overflow-y: auto;
+    }
+    .contact-panel .avatar { width: 64px; height: 64px; font-size: 22px; margin: 0 auto 10px; }
+    .contact-panel h2 { text-align: center; font-size: 15px; margin: 0 0 2px; }
+    .contact-panel .sub { text-align: center; font-size: 12px; color: var(--text-faint); margin-bottom: 20px; }
+    .info-block { margin-bottom: 18px; }
+    .info-block .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); font-weight: 700; margin-bottom: 6px; }
+    .info-row { font-size: 13px; color: var(--text); padding: 6px 0; border-bottom: 1px solid #F3F4F6; }
+    .status-select {
+        width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+        font-size: 13px; font-weight: 600; background: var(--bg); color: var(--text);
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #D6D9DE; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <!-- Navegação de canais -->
+    <nav class="nav" id="channelNav">
+        <div class="nav-logo">NX</div>
+        <div class="nav-item active" data-channel="" title="Todas as conversas">◈</div>
+    </nav>
+
+    <!-- Lista de conversas -->
+    <div class="conv-list">
+        <div class="conv-list-header">
+            <h1>Conversas</h1>
+            <div class="count" id="convCount">carregando...</div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar por nome do contato...">
+            </div>
+        </div>
+        <div class="filter-tabs" id="filterTabs">
+            <div class="filter-tab active" data-status="">Todas</div>
+            <div class="filter-tab" data-status="open">Abertas</div>
+            <div class="filter-tab" data-status="pending">Pendentes</div>
+            <div class="filter-tab" data-status="closed">Fechadas</div>
+        </div>
+        <div class="conv-items" id="convItems"></div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="empty-state">
+            <div class="glyph">◈</div>
+            <div>Selecione uma conversa para começar</div>
+        </div>
+    </div>
+
+    <!-- Painel de contato -->
+    <div class="contact-panel" id="contactPanel" style="display:none;"></div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+let currentConversationId = null;
+let currentFilters = { status: '', channel_type: '', search: '' };
+
+const CHANNEL_ICONS = { whatsapp: '💬', instagram: '📷', facebook: '👥', site: '🌐' };
+const CHANNEL_LABELS = { whatsapp: 'WhatsApp', instagram: 'Instagram', facebook: 'Facebook', site: 'Site' };
+
+function initials(name) {
+    return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function formatTime(iso) {
+    const d = new Date(iso + 'Z');
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    return sameDay
+        ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+async function loadChannelNav() {
+    const res = await fetch(`${API}/api/channels`);
+    const channels = await res.json();
+    const nav = document.getElementById('channelNav');
+
+    channels.forEach(ch => {
+        const el = document.createElement('div');
+        el.className = 'nav-item';
+        el.dataset.channel = ch.type;
+        el.title = ch.display_name;
+        el.textContent = CHANNEL_ICONS[ch.type] || '◈';
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            currentFilters.channel_type = ch.type;
+            loadConversations();
+        });
+        nav.appendChild(el);
+    });
+
+    document.querySelector('.nav-item[data-channel=""]').addEventListener('click', function () {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        this.classList.add('active');
+        currentFilters.channel_type = '';
+        loadConversations();
+    });
+}
+
+async function loadConversations() {
+    const params = new URLSearchParams();
+    if (currentFilters.status) params.set('status', currentFilters.status);
+    if (currentFilters.channel_type) params.set('channel_type', currentFilters.channel_type);
+    if (currentFilters.search) params.set('search', currentFilters.search);
+
+    const res = await fetch(`${API}/api/conversations?${params}`);
+    const conversations = await res.json();
+
+    document.getElementById('convCount').textContent = `${conversations.length} conversa${conversations.length !== 1 ? 's' : ''}`;
+
+    const container = document.getElementById('convItems');
+    container.innerHTML = '';
+
+    if (conversations.length === 0) {
+        container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:13px;">Nenhuma conversa encontrada.</div>';
+        return;
+    }
+
+    conversations.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'conv-item' + (conv.id === currentConversationId ? ' selected' : '');
+        item.dataset.id = conv.id;
+
+        const previewSender = conv.last_message_sender ? `<b>${conv.last_message_sender}:</b> ` : '';
+        const preview = conv.last_message_content || 'Sem mensagens ainda';
+
+        item.innerHTML = `
+            <div class="avatar">${initials(conv.contact_name)}</div>
+            <div class="conv-item-body">
+                <div class="conv-item-top">
+                    <span class="conv-item-name">${conv.contact_name}</span>
+                    <span class="conv-item-time mono">${formatTime(conv.last_message_at)}</span>
+                </div>
+                <div class="conv-item-preview">${previewSender}${preview}</div>
+                <div class="conv-item-footer">
+                    <span class="channel-dot" title="${CHANNEL_LABELS[conv.channel_type]}" style="background:${conv.channel_type === 'whatsapp' ? '#25D366' : conv.channel_type === 'instagram' ? '#E1306C' : conv.channel_type === 'facebook' ? '#1877F2' : '#6366F1'}"></span>
+                    ${conv.department ? `<span class="tag-pill" style="color:${conv.department_color};border-color:${conv.department_color}66;background:${conv.department_color}1F;">${conv.department}</span>` : ''}
+                    ${conv.unread_count > 0 ? `<span class="unread-dot">${conv.unread_count}</span>` : ''}
+                </div>
+            </div>
+        `;
+
+        item.addEventListener('click', () => openConversation(conv.id));
+        container.appendChild(item);
+    });
+}
+
+async function openConversation(id) {
+    currentConversationId = id;
+    document.querySelectorAll('.conv-item').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+
+    const res = await fetch(`${API}/api/conversations/${id}`);
+    const conv = await res.json();
+
+    renderChat(conv);
+    renderContactPanel(conv);
+
+    await fetch(`${API}/api/conversations/${id}/read`, { method: 'PUT' });
+    loadConversations();
+}
+
+function renderChat(conv) {
+    const panel = document.getElementById('chatPanel');
+    panel.innerHTML = `
+        <div class="chat-header">
+            <div class="avatar">${initials(conv.contact_name)}</div>
+            <div>
+                <div class="chat-header-name">${conv.contact_name}</div>
+                <div class="chat-header-sub">${CHANNEL_ICONS[conv.channel_type]} ${conv.channel_display_name}</div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="icon-btn" id="favBtn" title="Favoritar">${conv.is_favorite ? '★' : '☆'}</button>
+            </div>
+        </div>
+        <div class="messages" id="messagesContainer"></div>
+        <div class="composer">
+            <textarea id="messageInput" rows="1" placeholder="Digite uma mensagem..."></textarea>
+            <button class="send-btn" id="sendBtn">Enviar</button>
+        </div>
+    `;
+
+    const messagesContainer = document.getElementById('messagesContainer');
+    conv.messages.forEach(msg => {
+        const row = document.createElement('div');
+        row.className = `msg-row ${msg.direction}`;
+        row.innerHTML = `
+            <div class="msg-bubble">
+                ${msg.content}
+                <div class="msg-meta mono">${formatTime(msg.created_at)}</div>
+            </div>
+        `;
+        messagesContainer.appendChild(row);
+    });
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    document.getElementById('sendBtn').addEventListener('click', () => sendMessage(conv.id));
+    document.getElementById('messageInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(conv.id);
+        }
+    });
+    document.getElementById('favBtn').addEventListener('click', async () => {
+        await fetch(`${API}/api/conversations/${conv.id}/favorite`, { method: 'PUT' });
+        openConversation(conv.id);
+    });
+}
+
+function renderContactPanel(conv) {
+    const panel = document.getElementById('contactPanel');
+    panel.style.display = 'block';
+    panel.innerHTML = `
+        <div class="avatar">${initials(conv.contact_name)}</div>
+        <h2>${conv.contact_name}</h2>
+        <div class="sub">${CHANNEL_LABELS[conv.channel_type]}</div>
+
+        <div class="info-block">
+            <div class="label">Status da conversa</div>
+            <select class="status-select" id="statusSelect">
+                <option value="open" ${conv.status === 'open' ? 'selected' : ''}>Aberta</option>
+                <option value="pending" ${conv.status === 'pending' ? 'selected' : ''}>Pendente</option>
+                <option value="closed" ${conv.status === 'closed' ? 'selected' : ''}>Fechada</option>
+            </select>
+        </div>
+
+        <div class="info-block">
+            <div class="label">Contato</div>
+            <div class="info-row">📞 ${conv.contact_phone || '—'}</div>
+            <div class="info-row">✉️ ${conv.contact_email || '—'}</div>
+        </div>
+
+        <div class="info-block">
+            <div class="label">Departamento</div>
+            <div class="info-row">${conv.department || '—'}</div>
+        </div>
+
+        <div class="info-block">
+            <div class="label">ID da conversa</div>
+            <div class="info-row mono" style="font-size:11px;color:var(--text-faint);">${conv.id}</div>
+        </div>
+    `;
+
+    document.getElementById('statusSelect').addEventListener('change', async (e) => {
+        await fetch(`${API}/api/conversations/${conv.id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: e.target.value })
+        });
+        loadConversations();
+    });
+}
+
+async function sendMessage(conversationId) {
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    if (!content) return;
+
+    input.value = '';
+    await fetch(`${API}/api/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+
+    openConversation(conversationId);
+}
+
+document.getElementById('filterTabs').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('filter-tab')) return;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    currentFilters.status = e.target.dataset.status;
+    loadConversations();
+});
+
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentFilters.search = e.target.value;
+        loadConversations();
+    }, 250);
+});
+
+loadChannelNav();
+loadConversations();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+<table>
+        <thead>
+            <tr>
+                <th>ID do Lead</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Status de Conversão</th>
+                <th>Última Interação</th>
+                <th>Ações de Controle</th>
+            </tr>
+        </thead>
+        <tbody id="leadTableBody">
+            <!-- Renderização dinâmica via JavaScript -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function fetchLeads() {
+        const tableBody = document.getElementById('leadTableBody');
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando dados...</td></tr>';
+
+        try {
+            const response = await fetch('http://localhost:3000/api/leads');
+            const leads = await response.json();
+            
+            tableBody.innerHTML = '';
+
+            leads.forEach(record => {
+                const tr = document.createElement('tr');
+                const client = record.client_record;
+                const tracking = record.interaction_tracking;
+                const dataFormatada = new Date(tracking.last_interaction).toLocaleString('pt-BR');
+
+                tr.innerHTML = `
+                    <td><strong>${client.lead_id}</strong></td>
+                    <td>${client.contact_data.email_address}</td>
+                    <td>${client.contact_data.phone_number}</td>
+                    <td>
+                        <select onchange="updateStatus('${client.lead_id}', this.value)">
+                            <option value="qualify_lead" ${client.conversion_status === 'qualify_lead' ? 'selected' : ''}>Qualificação</option>
+                            <option value="proposals_sent" ${client.conversion_status === 'proposals_sent' ? 'selected' : ''}>Proposta Enviada</option>
+                            <option value="purchase" ${client.conversion_status === 'purchase' ? 'selected' : ''}>Convertido (Compra)</option>
+                        </select>
+                    </td>
+                    <td>${dataFormatada}</td>
+                    <td>
+                        <button style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;" onclick="deleteLead('${client.lead_id}')">Excluir</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        } catch (error) {
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Falha de conexão.</td></tr>';
+        }
+    }
+
+    async function updateStatus(leadId, newStatus) {
+        try {
+            await fetch(`http://localhost:3000/api/leads/${leadId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newStatus })
+            });
+            fetchLeads(); // Atualiza a tabela para refletir a alteração no timestamp
+        } catch (error) {
+            alert("Erro de comunicação ao atualizar status.");
+        }
+    }
+
+    async function deleteLead(leadId) {
+        if (!confirm(`Confirma a exclusão do lead ${leadId}?`)) return;
+        
+        try {
+            await fetch(`http://localhost:3000/api/leads/${leadId}`, {
+                method: 'DELETE'
+            });
+            fetchLeads(); // Re-renderiza a tabela após a exclusão
+        } catch (error) {
+            alert("Erro de comunicação ao excluir o registro.");
+        }
+    }
+
+    window.onload = fetchLeads;
+</script>

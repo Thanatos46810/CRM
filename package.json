@@ -1,0 +1,21 @@
+{
+  "name": "crm-project",
+  "version": "1.0.0",
+  "description": "Estrutura orientada a eventos para CRM",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "seed": "node src/seed_inbox.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

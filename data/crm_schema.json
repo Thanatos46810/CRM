@@ -1,0 +1,18 @@
+{
+  "crm_property_id": "string",
+  "client_record": {
+    "lead_id": "string",
+    "conversion_status": "string",
+    "acquisition_trigger": "string",
+    "contact_data": {
+      "vtp_redactEmail": "boolean",
+      "email_address": "string",
+      "phone_number": "string"
+    }
+  },
+  "interaction_tracking": {
+    "__ccd_em_proposals_sent": "number",
+    "__ccd_em_meetings_held": "number",
+    "last_interaction": "string"
+  }
+}

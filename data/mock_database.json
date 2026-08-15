@@ -1,0 +1,20 @@
+[
+  {
+    "crm_property_id": "CRM-987654321",
+    "client_record": {
+      "lead_id": "LD-85352",
+      "conversion_status": "purchase",
+      "acquisition_trigger": "manual_event_SUBMIT_LEAD_FORM",
+      "contact_data": {
+        "vtp_redactEmail": false,
+        "email_address": "dsfsd@gmail.com",
+        "phone_number": "4324345"
+      }
+    },
+    "interaction_tracking": {
+      "__ccd_em_proposals_sent": 0,
+      "__ccd_em_meetings_held": 0,
+      "last_interaction": "2026-08-15T12:58:00.728Z"
+    }
+  }
+]
