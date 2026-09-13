@@ -50,9 +50,7 @@ func ConnectDatabase() {
 		log.Fatalf("Falha ao conectar no banco de dados: %v", err)
 	}
 
-	err = database.AutoMigrate(&models.Usuario{}, &models.Lead{}, &models.Mensagem{}, &models.Integracao{})
-	if err != nil {
-		log.Fatalf("Falha ao executar auto-migration: %v", err)
+err = database.AutoMigrate(&models.Usuario{}, &models.Lead{}, &models.Mensagem{}, &models.Integracao{}, &models.ConfigEmailUsuario{})		log.Fatalf("Falha ao executar auto-migration: %v", err)
 	}
 
 	DB = database

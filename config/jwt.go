@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 func getSecretKey() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "chave_fallback_desenvolvimento"
+		log.Fatal("Erro fatal: variável de ambiente JWT_SECRET não foi definida")
 	}
 	return []byte(secret)
 }

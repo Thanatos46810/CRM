@@ -26,6 +26,7 @@ func main() {
 		// Rotas Públicas (Autenticação)
 		api.POST("/auth/registrar", controllers.Registrar)
 		api.POST("/auth/login", controllers.Login)
+		api.POST("/auth/verificar", controllers.VerificarCodigo)
 
 		// Rotas Protegidas por JWT
 		protected := api.Group("/")
