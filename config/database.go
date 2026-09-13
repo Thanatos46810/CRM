@@ -42,7 +42,7 @@ func ConnectDatabase() {
 		dbname = "crm_db"
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=America/Sao_Paulo",
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=America/Sao_Paulo",
 		host, user, password, dbname, port)
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -50,7 +50,9 @@ func ConnectDatabase() {
 		log.Fatalf("Falha ao conectar no banco de dados: %v", err)
 	}
 
-err = database.AutoMigrate(&models.Usuario{}, &models.Lead{}, &models.Mensagem{}, &models.Integracao{}, &models.ConfigEmailUsuario{})		log.Fatalf("Falha ao executar auto-migration: %v", err)
+	err = database.AutoMigrate(&models.Usuario{}, &models.Lead{}, &models.Mensagem{}, &models.Integracao{}, &models.ConfigEmailUsuario{})
+	if err != nil {
+		log.Fatalf("Falha ao executar auto-migration: %v", err)
 	}
 
 	DB = database

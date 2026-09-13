@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — CRM Pipeline Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --accent: #0F6B66;
+        --accent-dark: #0B4F4B;
+        --bg: #F6F7F8;
+        --panel: #FFFFFF;
+        --border: #E4E6EA;
+        --text: #1B1F23;
+        --text-muted: #6B7280;
+        --danger: #DC2626;
+        --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .logo {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    p.subtitle { color: var(--text-muted); font-size: 13px; margin: 0 0 24px; }
+    label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; margin-top: 14px; }
+    input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 11px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    button:hover { background: var(--accent-dark); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .toggle {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    .toggle a { color: var(--accent); text-decoration: none; font-weight: 500; cursor: pointer; }
+    #msg {
+        margin-top: 14px;
+        font-size: 13px;
+        text-align: center;
+        min-height: 18px;
+    }
+    #msg.error { color: var(--danger); }
+    #msg.success { color: var(--accent); }
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo">CP</div>
+    <h1 id="formTitle">Entrar no CRM</h1>
+    <p class="subtitle" id="formSubtitle">Acesse sua conta pra gerenciar seus leads</p>
+
+    <!-- Formulário de Login -->
+    <form id="loginForm">
+        <label for="loginEmail">E-mail</label>
+        <input type="email" id="loginEmail" required placeholder="voce@empresa.com">
+
+        <label for="loginSenha">Senha</label>
+        <input type="password" id="loginSenha" required placeholder="••••••••">
+
+        <button type="submit" id="loginBtn">Entrar</button>
+    </form>
+
+    <!-- Formulário de Cadastro -->
+    <form id="registerForm" class="hidden">
+        <label for="regNome">Nome</label>
+        <input type="text" id="regNome" required placeholder="Seu nome">
+
+        <label for="regEmail">E-mail</label>
+        <input type="email" id="regEmail" required placeholder="voce@empresa.com">
+
+        <label for="regSenha">Senha</label>
+        <input type="password" id="regSenha" required placeholder="••••••••">
+
+        <button type="submit" id="registerBtn">Criar conta</button>
+    </form>
+
+    <!-- Formulário de Verificação OTP -->
+    <form id="otpForm" class="hidden">
+        <label for="otpCodigo">Código de verificação</label>
+        <input type="text" id="otpCodigo" required placeholder="000000" maxlength="6">
+        <button type="submit" id="otpBtn">Verificar</button>
+    </form>
+
+    <div id="msg"></div>
+
+    <div class="toggle" id="toggleArea">
+        Não tem conta? <a onclick="showRegister()">Cadastre-se</a>
+    </div>
+</div>
+
+<script>
+    // TODO: troque pela URL real do seu backend no Render
+    const API_BASE_URL = "https://SEU-BACKEND-NO-RENDER.onrender.com";
+
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const otpForm = document.getElementById('otpForm');
+    const msg = document.getElementById('msg');
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const toggleArea = document.getElementById('toggleArea');
+
+    let emailPendenteVerificacao = "";
+
+    function showMsg(text, type) {
+        msg.textContent = text;
+        msg.className = type;
+    }
+
+    function showRegister() {
+        loginForm.classList.add('hidden');
+        otpForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        formTitle.textContent = "Criar conta";
+        formSubtitle.textContent = "Cadastre-se pra começar a usar o CRM";
+        toggleArea.innerHTML = 'Já tem conta? <a onclick="showLogin()">Entrar</a>';
+        showMsg("", "");
+    }
+
+    function showLogin() {
+        registerForm.classList.add('hidden');
+        otpForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        formTitle.textContent = "Entrar no CRM";
+        formSubtitle.textContent = "Acesse sua conta pra gerenciar seus leads";
+        toggleArea.innerHTML = 'Não tem conta? <a onclick="showRegister()">Cadastre-se</a>';
+        showMsg("", "");
+    }
+
+    function showOtp(email) {
+        emailPendenteVerificacao = email;
+        loginForm.classList.add('hidden');
+        registerForm.classList.add('hidden');
+        otpForm.classList.remove('hidden');
+        formTitle.textContent = "Verifique seu e-mail";
+        formSubtitle.textContent = `Digite o código enviado para ${email}`;
+        toggleArea.innerHTML = '';
+    }
+
+    function irParaDashboard(token, usuario) {
+        localStorage.setItem('crm_token', token);
+        localStorage.setItem('crm_usuario', JSON.stringify(usuario));
+        window.location.href = 'dashboard.html';
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        showMsg("Entrando...", "success");
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                showMsg("Conta pendente de verificação. Insira o código enviado.", "error");
+                showOtp(data.email || email);
+                return;
+            }
+
+            if (!res.ok) {
+                showMsg(data.error || "Erro ao entrar", "error");
+                return;
+            }
+
+            showMsg("Login realizado!", "success");
+            irParaDashboard(data.token, data.usuario);
+        } catch (err) {
+            showMsg("Falha de conexão com o servidor", "error");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nome = document.getElementById('regNome').value;
+        const email = document.getElementById('regEmail').value;
+        const senha = document.getElementById('regSenha').value;
+        const btn = document.getElementById('registerBtn');
+        btn.disabled = true;
+        showMsg("Criando conta...", "success");
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/auth/registrar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email, senha })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg(data.error || "Erro ao cadastrar", "error");
+                return;
+            }
+
+            showMsg(data.message || "Código enviado!", "success");
+            showOtp(data.email || email);
+        } catch (err) {
+            showMsg("Falha de conexão com o servidor", "error");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    otpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const codigo = document.getElementById('otpCodigo').value;
+        const btn = document.getElementById('otpBtn');
+        btn.disabled = true;
+        showMsg("Verificando...", "success");
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/auth/verificar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailPendenteVerificacao, codigo })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg(data.error || "Código inválido", "error");
+                return;
+            }
+
+            showMsg("Conta verificada!", "success");
+            irParaDashboard(data.token, data.usuario);
+        } catch (err) {
+            showMsg("Falha de conexão com o servidor", "error");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
