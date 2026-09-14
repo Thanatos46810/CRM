@@ -51,12 +51,13 @@ func Registrar(c *gin.Context) {
 		usuarioExistente.CodigoVerificacao = codigo
 		config.DB.Save(&usuarioExistente)
 
-		if err := utils.EnviarCodigoEmail(usuarioExistente.Email, codigo); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("Erro ao enviar código de verificação: %s", err.Error()),
-			})
-			return
-		}
+		utils.EnviarCodigoEmail(usuarioExistente.Email, codigo)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("Código reenviado para a sua conta (%s)", usuarioExistente.Email),
+			"email":   usuarioExistente.Email,
+		})
+		return
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": fmt.Sprintf("Código reenviado para a sua conta (%s)", usuarioExistente.Email),
