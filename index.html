@@ -1,71 +1,146 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captura de Lead - CRM</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 50px; }
-        .form-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #004494; }
-        #status { margin-top: 15px; font-weight: bold; text-align: center; }
-    </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Pipeline Pro — Seu funil de vendas, organizado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink: #16231F;
+        --ink-muted: #5C6560;
+        --paper: #F7F5F1;
+        --panel: #FFFFFF;
+        --border: #DCD7CD;
+        --accent: #1D7A6F;
+        --accent-dark: #145850;
+        --accent-soft: #E1EEEC;
+        --amber: #E8A33D;
+        --amber-soft: #FBEFDA;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.5;
+    }
+    h1, h2, h3, .wordmark {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-<div class="form-container">
-    <h2>Registro de Lead</h2>
-    <form id="leadForm">
-        <label for="email">Endereço de E-mail:</label>
-        <input type="email" id="email" required placeholder="contato@exemplo.com.br">
+    /* ---- Nav ---- */
+    nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 0;
+    }
+    .wordmark { font-size: 18px; display: flex; align-items: center; gap: 9px; }
+    .wordmark .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--ink-muted); }
+    .nav-links a:hover { color: var(--ink); }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-ghost { border-color: var(--border); color: var(--ink); }
+    .btn-ghost:hover { background: var(--panel); }
 
-        <label for="phone">Número de Telefone:</label>
-        <input type="tel" id="phone" required placeholder="+5511999999999">
+    /* ---- Hero ---- */
+    .hero {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
+        align-items: center;
+        padding: 56px 0 88px;
+    }
+    .hero h1 {
+        font-size: 44px;
+        line-height: 1.12;
+        max-width: 480px;
+    }
+    .hero p {
+        margin-top: 18px;
+        font-size: 16px;
+        color: var(--ink-muted);
+        max-width: 420px;
+    }
+    .hero-ctas { display: flex; gap: 12px; margin-top: 28px; }
+    .hero-stat {
+        margin-top: 36px;
+        display: flex;
+        gap: 28px;
+    }
+    .hero-stat div strong { display: block; font-size: 22px; font-family: 'Space Grotesk', sans-serif; }
+    .hero-stat div span { font-size: 13px; color: var(--ink-muted); }
 
-        <button type="submit">Enviar Dados</button>
-    </form>
-    <div id="status"></div>
-</div>
+    /* ---- Kanban mockup ---- */
+    .kanban {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    .kcol {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 10px;
+    }
+    .kcol h4 {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ink-muted);
+        margin-bottom: 10px;
+        padding: 0 2px;
+    }
+    .kcard {
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 10px;
+        margin-bottom: 8px;
+        font-size: 12.5px;
+    }
+    .kcard strong { display: block; font-size: 13px; margin-bottom: 3px; }
+    .kcard .kval { color: var(--accent-dark); font-weight: 600; font-size: 12px; }
+    .kcard.highlight { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .badge {
+        display: inline-block;
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 100px;
+        background: var(--amber-soft);
+        color: #92600F;
+        margin-top: 6px;
+    }
 
-<script>
-    document.getElementById('leadForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Impede o recarregamento padrão da página
+    /* ---- Como funciona ---- */
+    .section { padding: 64px 0; border-top: 1px solid var(--border); }
+    .section-head { max-width: 480px; margin-bottom: 40px; }
+    .section-head h2 { font-size: 28px; }
+    .section-head p { margin-top: 10px; color: var(--ink-muted); font-size: 15px; }
 
-        const emailData = document.getElementById('email').value;
-        const phoneData = document.getElementById('phone').value;
-        const statusDiv = document.getElementById('status');
-
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Enviando dados para o servidor...";
-
-        try {
-            // Disparo da requisição HTTP POST para o Back-end
-            const response = await fetch('http://localhost:3000/api/event', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email: emailData, phone: phoneData })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                statusDiv.style.color = "green";
-                statusDiv.innerText = "Lead cadastrado com sucesso!";
-                document.getElementById('leadForm').reset();
-            } else {
-                statusDiv.style.color = "red";
-                statusDiv.innerText = "Erro: " + result.mensagem;
-            }
-        } catch (error) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Falha na conexão com o servidor. Verifique se o app.js está rodando.";
-        }
-    });
-</script>
-
-</body>
-</html>
+    .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+    }
+    .step .num {
+        font-family: 'Space
