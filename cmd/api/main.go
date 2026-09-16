@@ -27,7 +27,9 @@ func main() {
 		api.POST("/auth/registrar", controllers.Registrar)
 		api.POST("/auth/login", controllers.Login)
 		api.POST("/auth/verificar", controllers.VerificarCodigo)
-
+				api.POST("/auth/verificar", controllers.VerificarCodigo)
+		api.POST("/auth/esqueci-senha", controllers.SolicitarResetSenha)
+		api.POST("/auth/redefinir-senha", controllers.RedefinirSenha)
 		// Rotas Protegidas por JWT
 		protected := api.Group("/")
 		protected.Use(middlewares.AuthRequired())
