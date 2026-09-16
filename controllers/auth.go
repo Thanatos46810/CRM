@@ -103,6 +103,47 @@ func Registrar(c *gin.Context) {
 	})
 }
 
+// ReenviarCodigo gera um novo código para uma conta ainda não verificada.
+func ReenviarCodigo(c *gin.Context) {
+	var input struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Endereço de e-mail inválido"})
+		return
+	}
+
+	var usuario models.Usuario
+	if err := config.DB.Where("email = ?", input.Email).First(&usuario).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Conta não encontrada"})
+		return
+	}
+
+	if usuario.Verificado {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Esta conta já foi verificada. Faça login."})
+		return
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	codigo := fmt.Sprintf("%06d", rand.Intn(1000000))
+	usuario.CodigoVerificacao = codigo
+	if err := config.DB.Save(&usuario).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar código de verificação"})
+		return
+	}
+
+	if err := utils.EnviarCodigoEmail(usuario.Email, codigo); err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Código reenviado para a sua conta (%s)", usuario.Email),
+		"email":   usuario.Email,
+	})
+}
+
 // Login realiza a autenticação do usuário e gera o token JWT
 func Login(c *gin.Context) {
 	var input struct {

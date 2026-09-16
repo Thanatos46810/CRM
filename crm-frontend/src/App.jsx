@@ -153,11 +153,7 @@ export default function App() {
     setAuthSucesso('');
     setReenviandoCodigo(true);
     try {
-      const res = await axios.post(`${API_URL}/auth/registrar`, {
-        nome: authForm.nome,
-        email: emailPendente,
-        senha: authForm.senha,
-      });
+      const res = await axios.post(`${API_URL}/auth/reenviar-codigo`, { email: emailPendente });
       setAuthSucesso(res.data.message || 'Código reenviado!');
     } catch (error) {
       setAuthErro(error.response?.data?.error || 'Erro ao reenviar código.');

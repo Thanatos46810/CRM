@@ -25,6 +25,7 @@ func main() {
 	{
 		// Rotas Públicas (Autenticação)
 		api.POST("/auth/registrar", controllers.Registrar)
+		api.POST("/auth/reenviar-codigo", controllers.ReenviarCodigo)
 		api.POST("/auth/login", controllers.Login)
 		api.POST("/auth/verificar", controllers.VerificarCodigo)
 		api.POST("/auth/esqueci-senha", controllers.SolicitarResetSenha)
