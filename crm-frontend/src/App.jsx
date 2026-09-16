@@ -34,7 +34,6 @@ export default function App() {
   const [emailPendente, setEmailPendente] = useState('');
   const [authErro, setAuthErro] = useState('');
   const [authSucesso, setAuthSucesso] = useState('');
-    const [authSucesso, setAuthSucesso] = useState('');
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetCodigo, setResetCodigo] = useState('');
