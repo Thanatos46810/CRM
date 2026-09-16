@@ -9,4 +9,5 @@ type Usuario struct {
 	Senha             string `json:"senha,omitempty" binding:"required"`
 	CodigoVerificacao string `json:"-"`
 	Verificado        bool   `json:"verificado" gorm:"default:false"`
+	CodigoResetSenha  string`json:"-"`
 }
