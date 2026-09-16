@@ -34,6 +34,11 @@ export default function App() {
   const [emailPendente, setEmailPendente] = useState('');
   const [authErro, setAuthErro] = useState('');
   const [authSucesso, setAuthSucesso] = useState('');
+    const [authSucesso, setAuthSucesso] = useState('');
+  const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCodigo, setResetCodigo] = useState('');
+  const [resetNovaSenha, setResetNovaSenha] = useState('');
 
   // Dashboard & Leads
   const [leads, setLeads] = useState([]);
@@ -115,6 +120,55 @@ export default function App() {
         codigo: codigoOtp,
       });
 
+        const handleReenviarCodigo = async () => {
+    setAuthErro('');
+    setAuthSucesso('');
+    setReenviandoCodigo(true);
+    try {
+      const res = await axios.post(`${API_URL}/auth/registrar`, {
+        nome: authForm.nome,
+        email: emailPendente,
+        senha: authForm.senha,
+      });
+      setAuthSucesso(res.data.message || 'Código reenviado!');
+    } catch (error) {
+      setAuthErro(error.response?.data?.error || 'Erro ao reenviar código.');
+    } finally {
+      setReenviandoCodigo(false);
+    }
+  };
+
+  const handleSolicitarReset = async (e) => {
+    e.preventDefault();
+    setAuthErro('');
+    setAuthSucesso('');
+    try {
+      const res = await axios.post(`${API_URL}/auth/esqueci-senha`, { email: resetEmail });
+      setAuthSucesso(res.data.message || 'Código enviado!');
+      setModoAuth('redefinir_senha');
+    } catch (error) {
+      setAuthErro(error.response?.data?.error || 'Erro ao solicitar redefinição.');
+    }
+  };
+
+  const handleRedefinirSenha = async (e) => {
+    e.preventDefault();
+    setAuthErro('');
+    setAuthSucesso('');
+    try {
+      const res = await axios.post(`${API_URL}/auth/redefinir-senha`, {
+        email: resetEmail,
+        codigo: resetCodigo,
+        nova_senha: resetNovaSenha,
+      });
+      setAuthSucesso(res.data.message || 'Senha redefinida! Faça login.');
+      setModoAuth('login');
+      setResetCodigo('');
+      setResetNovaSenha('');
+    } catch (error) {
+      setAuthErro(error.response?.data?.error || 'Código inválido ou expirado.');
+    }
+  };
       const { token, usuario } = res.data;
 
       localStorage.setItem('token', token);
@@ -270,14 +324,14 @@ export default function App() {
 
   const formatarMoeda = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-  // TELA DE LOGIN / CADASTRO / VERIFICAÇÃO OTP
+    // TELA DE LOGIN / CADASTRO / VERIFICAÇÃO OTP / RECUPERAÇÃO DE SENHA
   if (!token) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 antialiased">
         <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 p-8 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6">
           <div className="text-center space-y-2">
             <div className="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-2">
-              {modoAuth === 'verificar_codigo' ? <KeyRound className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
+              {(modoAuth === 'verificar_codigo' || modoAuth === 'redefinir_senha') ? <KeyRound className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
               CRM Pipeline Pro
@@ -286,6 +340,8 @@ export default function App() {
               {modoAuth === 'login' && 'Entre com sua conta para acessar seus leads'}
               {modoAuth === 'registro' && 'Crie sua conta para começar gratuitamente'}
               {modoAuth === 'verificar_codigo' && `Insira o código de 6 dígitos enviado para ${emailPendente}`}
+              {modoAuth === 'esqueci_senha' && 'Informe seu e-mail para receber um código de redefinição'}
+              {modoAuth === 'redefinir_senha' && `Insira o código enviado para ${resetEmail} e sua nova senha`}
             </p>
           </div>
 
@@ -301,7 +357,7 @@ export default function App() {
             </div>
           )}
 
-          {modoAuth === 'verificar_codigo' ? (
+          {modoAuth === 'verificar_codigo' && (
             <form onSubmit={handleVerificarCodigo} className="space-y-4">
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Código de Verificação (OTP)</label>
@@ -319,8 +375,55 @@ export default function App() {
               <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-500/20 cursor-pointer transition">
                 Verificar e Entrar
               </button>
+
+              <button 
+                type="button" 
+                onClick={handleReenviarCodigo} 
+                disabled={reenviandoCodigo}
+                className="w-full text-center text-xs text-blue-400 hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {reenviandoCodigo ? 'Reenviando...' : 'Reenviar código'}
+              </button>
             </form>
-          ) : (
+          )}
+
+          {modoAuth === 'esqueci_senha' && (
+            <form onSubmit={handleSolicitarReset} className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">E-mail</label>
+                <input type="email" required value={resetEmail} onChange={e => setResetEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500" placeholder="seu@email.com" />
+              </div>
+              <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-500/20 cursor-pointer transition">
+                Enviar código de redefinição
+              </button>
+            </form>
+          )}
+
+          {modoAuth === 'redefinir_senha' && (
+            <form onSubmit={handleRedefinirSenha} className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Código recebido por e-mail</label>
+                <input 
+                  type="text" 
+                  maxLength={6} 
+                  required 
+                  value={resetCodigo} 
+                  onChange={e => setResetCodigo(e.target.value)} 
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-widest text-blue-400 focus:outline-none focus:border-blue-500" 
+                  placeholder="000000" 
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Nova senha</label>
+                <input type="password" required value={resetNovaSenha} onChange={e => setResetNovaSenha(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500" placeholder="••••••••" />
+              </div>
+              <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-500/20 cursor-pointer transition">
+                Redefinir senha
+              </button>
+            </form>
+          )}
+
+          {(modoAuth === 'login' || modoAuth === 'registro') && (
             <form onSubmit={handleAuth} className="space-y-4">
               {modoAuth === 'registro' && (
                 <>
@@ -345,6 +448,12 @@ export default function App() {
                 <input type="password" required value={authForm.senha} onChange={e => setAuthForm({...authForm, senha: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500" placeholder="••••••••" />
               </div>
 
+              {modoAuth === 'login' && (
+                <button type="button" onClick={() => { setModoAuth('esqueci_senha'); setAuthErro(''); setAuthSucesso(''); setResetEmail(authForm.email); }} className="text-xs text-blue-400 hover:underline cursor-pointer -mt-2 block">
+                  Esqueceu a senha?
+                </button>
+              )}
+
               <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-500/20 cursor-pointer transition">
                 {modoAuth === 'login' ? 'Entrar no Sistema' : 'Criar Conta'}
               </button>
@@ -352,7 +461,7 @@ export default function App() {
           )}
 
           <div className="text-center border-t border-slate-800/80 pt-4 flex justify-center gap-4">
-            {modoAuth === 'verificar_codigo' ? (
+            {(modoAuth === 'verificar_codigo' || modoAuth === 'esqueci_senha' || modoAuth === 'redefinir_senha') ? (
               <button onClick={() => { setModoAuth('login'); setAuthErro(''); setAuthSucesso(''); }} className="text-xs text-blue-400 hover:underline cursor-pointer">
                 Voltar para o Login
               </button>
