@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/mail"
-	"net/smtp"
 	"os"
 	"time"
 )
@@ -14,26 +16,22 @@ func ValidarEmail(email string) bool {
 	return err == nil
 }
 
-// EnviarCodigoEmail dispara o envio em segundo plano (goroutine) para não travar
-// a resposta HTTP caso o SMTP demore ou falhe. Erros são apenas logados no servidor.
+// EnviarCodigoEmail dispara o envio em segundo plano via API HTTP do Resend
+// (em vez de SMTP, que é bloqueado no plano free do Render).
 func EnviarCodigoEmail(destinatario, codigo string) error {
 	if !ValidarEmail(destinatario) {
 		return fmt.Errorf("endereço de e-mail inválido")
 	}
 
-	password := os.Getenv("SMTP_PASSWORD")
-	smtpHost := os.Getenv("SMTP_HOST")
-	smtpPort := os.Getenv("SMTP_PORT")
-	from := "onboarding@resend.dev"
+	apiKey := os.Getenv("SMTP_PASSWORD") // reaproveitando a mesma variável, que já guarda a API Key do Resend
 
-	if password == "" {
+	if apiKey == "" {
 		fmt.Printf("[DEV LOG] Código %s gerado para o e-mail: %s\n", codigo, destinatario)
 		return nil
 	}
 
-	// Dispara em background com timeout próprio, para nunca travar quem chamou esta função
 	go func() {
-		if err := enviarComTimeout(smtpHost, smtpPort, password, from, destinatario, codigo); err != nil {
+		if err := enviarViaResendAPI(apiKey, destinatario, codigo); err != nil {
 			log.Printf("[EMAIL] Falha ao enviar código para %s: %v\n", destinatario, err)
 		} else {
 			log.Printf("[EMAIL] Código enviado com sucesso para %s\n", destinatario)
@@ -43,25 +41,36 @@ func EnviarCodigoEmail(destinatario, codigo string) error {
 	return nil
 }
 
-func enviarComTimeout(smtpHost, smtpPort, password, from, destinatario, codigo string) error {
-	done := make(chan error, 1)
-
-	go func() {
-		auth := smtp.PlainAuth("", "resend", password, smtpHost)
-		msg := []byte(fmt.Sprintf("From: CRM Pipeline <%s>\r\n"+
-			"To: %s\r\n"+
-			"Subject: Codigo de Verificacao - CRM\r\n"+
-			"\r\n"+
-			"Seu codigo de verificacao e: %s\r\n", from, destinatario, codigo))
-
-		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{destinatario}, msg)
-		done <- err
-	}()
-
-	select {
-	case err := <-done:
-		return err
-	case <-time.After(15 * time.Second):
-		return fmt.Errorf("tempo esgotado ao conectar no servidor SMTP (%s:%s)", smtpHost, smtpPort)
+func enviarViaResendAPI(apiKey, destinatario, codigo string) error {
+	payload := map[string]string{
+		"from":    "CRM Pipeline <onboarding@resend.dev>",
+		"to":      destinatario,
+		"subject": "Codigo de Verificacao - CRM",
+		"text":    fmt.Sprintf("Seu codigo de verificacao e: %s", codigo),
 	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("erro ao montar corpo da requisição: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("erro ao criar requisição: %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("erro de conexão com a API do Resend: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("Resend retornou status %d", resp.StatusCode)
+	}
+
+	return nil
 }
