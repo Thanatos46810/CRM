@@ -5,7 +5,7 @@ import {
   UserPlus, Users, Building, Phone, Mail, RefreshCw, 
   LayoutGrid, List, GripVertical, DollarSign, TrendingUp, Target, 
   MessageSquare, X, Send, Search, Download, Trash2, Edit3, LogOut, Lock, 
-  Share2, CheckCircle, AlertCircle, KeyRound
+  Share2, CheckCircle, AlertCircle, KeyRound, Moon, Sun
 } from 'lucide-react';
 
 const API_URL = 'https://crm-lju4.onrender.com/api/v1';
@@ -38,6 +38,12 @@ export default function App() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetCodigo, setResetCodigo] = useState('');
   const [resetNovaSenha, setResetNovaSenha] = useState('');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('crm-theme') === 'dark');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
+    localStorage.setItem('crm-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   // Dashboard & Leads
   const [leads, setLeads] = useState([]);
@@ -72,7 +78,7 @@ export default function App() {
     if (modoAuth === 'login') {
       try {
         const res = await axios.post(`${API_URL}/auth/login`, {
-          email: authForm.email,
+          email: authForm.email.trim(),
           senha: authForm.senha,
         });
         const { token, usuario } = res.data;
@@ -84,9 +90,15 @@ export default function App() {
         setUsuario(usuario);
       } catch (error) {
         if (error.response?.status === 403) {
-          setEmailPendente(error.response.data.email || authForm.email);
+          setEmailPendente(error.response.data.email || authForm.email.trim());
           setModoAuth('verificar_codigo');
           setAuthErro('Sua conta ainda não foi verificada. Insira o código enviado por e-mail.');
+        } else if (error.response?.status === 401) {
+          setAuthErro('E-mail ou senha incorretos.');
+        } else if (error.response?.status === 503) {
+          setAuthErro('O servidor está iniciando. Aguarde alguns segundos e tente novamente.');
+        } else if (!error.response) {
+          setAuthErro('Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.');
         } else {
           setAuthErro(error.response?.data?.error || 'Erro ao realizar login.');
         }
@@ -95,15 +107,21 @@ export default function App() {
       try {
         const res = await axios.post(`${API_URL}/auth/registrar`, {
           nome: authForm.nome,
-          email: authForm.email,
+          email: authForm.email.trim(),
           senha: authForm.senha,
         });
 
-        setEmailPendente(res.data.email || authForm.email);
+        setEmailPendente(res.data.email || authForm.email.trim());
         setAuthSucesso(res.data.message || 'Código enviado para o seu e-mail!');
         setModoAuth('verificar_codigo');
       } catch (error) {
-        setAuthErro(error.response?.data?.error || 'Erro ao realizar cadastro.');
+        if (error.response?.status === 503) {
+          setAuthErro('O servidor está iniciando. Aguarde alguns segundos e tente novamente.');
+        } else if (!error.response) {
+          setAuthErro('Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.');
+        } else {
+          setAuthErro(error.response?.data?.error || 'Erro ao realizar cadastro.');
+        }
       }
     }
   };
@@ -118,8 +136,19 @@ export default function App() {
         email: emailPendente,
         codigo: codigoOtp,
       });
+      const { token, usuario } = res.data;
 
-        const handleReenviarCodigo = async () => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+
+      setToken(token);
+      setUsuario(usuario);
+    } catch (error) {
+      setAuthErro(error.response?.data?.error || 'Código incorreto ou expirado.');
+    }
+  };
+
+  const handleReenviarCodigo = async () => {
     setAuthErro('');
     setAuthSucesso('');
     setReenviandoCodigo(true);
@@ -166,17 +195,6 @@ export default function App() {
       setResetNovaSenha('');
     } catch (error) {
       setAuthErro(error.response?.data?.error || 'Código inválido ou expirado.');
-    }
-  };
-      const { token, usuario } = res.data;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('usuario', JSON.stringify(usuario));
-
-      setToken(token);
-      setUsuario(usuario);
-    } catch (error) {
-      setAuthErro(error.response?.data?.error || 'Código incorreto ou expirado.');
     }
   };
 
@@ -327,6 +345,15 @@ export default function App() {
   if (!token) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 antialiased">
+        <button
+          type="button"
+          onClick={() => setDarkMode(value => !value)}
+          className="fixed top-5 right-5 z-10 border border-slate-800 bg-slate-900 text-slate-500 hover:text-slate-100 p-2.5 rounded-full cursor-pointer"
+          aria-label={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+          title={darkMode ? 'Modo claro' : 'Modo escuro'}
+        >
+          {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
         <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 p-8 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6">
           <div className="text-center space-y-2">
             <div className="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-2">
@@ -539,6 +566,16 @@ export default function App() {
 
             <button onClick={handleLogout} className="flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-2 rounded-xl text-xs cursor-pointer transition">
               <LogOut className="w-3.5 h-3.5" /> Sair
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDarkMode(value => !value)}
+              className="border border-slate-800 bg-slate-900 text-slate-500 hover:text-slate-100 p-2 rounded-xl cursor-pointer"
+              aria-label={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+              title={darkMode ? 'Modo claro' : 'Modo escuro'}
+            >
+              {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
           </div>
         </header>

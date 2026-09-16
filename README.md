@@ -36,6 +36,20 @@ O **CRM Pipeline Pro** é uma plataforma moderna e completa para gestão de lead
 
 ## ⚙️ Arquitetura e Estrutura do Projeto
 
+## ✉️ Configuração de e-mail
+
+No ambiente de produção, configure estas variáveis no Render:
+
+```env
+RESEND_API_KEY=re_xxxxxxxxx
+EMAIL_FROM=CRM Pipeline <noreply@seudominioverificado.com>
+JWT_SECRET=uma-chave-longa-e-segura
+```
+
+O endereço usado em `EMAIL_FROM` precisa pertencer a um domínio verificado no Resend. O remetente `onboarding@resend.dev` só deve ser usado para testes permitidos pela conta do Resend.
+
+Sem `RESEND_API_KEY`, o cadastro e a recuperação de senha retornam erro explícito em vez de informar falsamente que o código foi enviado.
+
 ```text
 CRM/
 ├── cmd/

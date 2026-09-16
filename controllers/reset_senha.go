@@ -43,9 +43,15 @@ func SolicitarResetSenha(c *gin.Context) {
 	codigo := fmt.Sprintf("%06d", rand.Intn(1000000))
 
 	usuario.CodigoResetSenha = codigo
-	config.DB.Save(&usuario)
+	if err := config.DB.Save(&usuario).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar código de redefinição"})
+		return
+	}
 
-	utils.EnviarCodigoResetSenha(usuario.Email, codigo)
+	if err := utils.EnviarCodigoResetSenha(usuario.Email, codigo); err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Se este e-mail estiver cadastrado, um código de redefinição foi enviado."})
 }

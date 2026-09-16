@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"net/mail"
 	"os"
@@ -16,68 +16,44 @@ func ValidarEmail(email string) bool {
 	return err == nil
 }
 
-// EnviarCodigoEmail dispara o envio em segundo plano via API HTTP do Resend
-// (em vez de SMTP, que é bloqueado no plano free do Render).
+// EnviarCodigoEmail envia o código de verificação pela API HTTP do Resend.
 func EnviarCodigoEmail(destinatario, codigo string) error {
-	if !ValidarEmail(destinatario) {
-		return fmt.Errorf("endereço de e-mail inválido")
-	}
-
-	apiKey := os.Getenv("SMTP_PASSWORD") // reaproveitando a mesma variável, que já guarda a API Key do Resend
-
-	if apiKey == "" {
-		fmt.Printf("[DEV LOG] Código %s gerado para o e-mail: %s\n", codigo, destinatario)
-		return nil
-	}
-
-	go func() {
-		if err := enviarViaResendAPI(apiKey, destinatario, codigo); err != nil {
-			log.Printf("[EMAIL] Falha ao enviar código para %s: %v\n", destinatario, err)
-		} else {
-			log.Printf("[EMAIL] Código enviado com sucesso para %s\n", destinatario)
-		}
-	}()
-
-	return nil
+	return enviarCodigo(destinatario, codigo, "Codigo de Verificacao - CRM", "Seu codigo de verificacao e: %s")
 }
 
-func enviarViaResendAPI(apiKey, destinatario, codigo string) error {
-	payload := map[string]string{
-		"from":    "CRM Pipeline <onboarding@resend.dev>",
-		"to":      destinatario,
-		"subject": "Codigo de Verificacao - CRM",
-		"text":    fmt.Sprintf("Seu codigo de verificacao e: %s", codigo),
-	}
-	// EnviarCodigoResetSenha envia o código de redefinição de senha por e-mail
+// EnviarCodigoResetSenha envia o código de redefinição de senha por e-mail.
 func EnviarCodigoResetSenha(destinatario, codigo string) error {
+	return enviarCodigo(destinatario, codigo, "Redefinicao de Senha - CRM", "Seu codigo para redefinir a senha e: %s")
+}
+
+func enviarCodigo(destinatario, codigo, assunto, mensagem string) error {
 	if !ValidarEmail(destinatario) {
 		return fmt.Errorf("endereço de e-mail inválido")
 	}
 
-	apiKey := os.Getenv("SMTP_PASSWORD")
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		apiKey = os.Getenv("SMTP_PASSWORD")
+	}
 
 	if apiKey == "" {
-		fmt.Printf("[DEV LOG] Código de redefinição %s gerado para o e-mail: %s\n", codigo, destinatario)
-		return nil
+		return fmt.Errorf("serviço de e-mail não configurado: defina RESEND_API_KEY")
 	}
 
-	go func() {
-		if err := enviarResetViaResendAPI(apiKey, destinatario, codigo); err != nil {
-			log.Printf("[EMAIL] Falha ao enviar código de redefinição para %s: %v\n", destinatario, err)
-		} else {
-			log.Printf("[EMAIL] Código de redefinição enviado com sucesso para %s\n", destinatario)
-		}
-	}()
-
-	return nil
+	return enviarViaResendAPI(apiKey, destinatario, assunto, fmt.Sprintf(mensagem, codigo))
 }
 
-func enviarResetViaResendAPI(apiKey, destinatario, codigo string) error {
+func enviarViaResendAPI(apiKey, destinatario, assunto, mensagem string) error {
+	remetente := os.Getenv("EMAIL_FROM")
+	if remetente == "" {
+		remetente = "CRM Pipeline <onboarding@resend.dev>"
+	}
+
 	payload := map[string]string{
-		"from":    "CRM Pipeline <onboarding@resend.dev>",
+		"from":    remetente,
 		"to":      destinatario,
-		"subject": "Redefinicao de Senha - CRM",
-		"text":    fmt.Sprintf("Seu codigo para redefinir a senha e: %s", codigo),
+		"subject": assunto,
+		"text":    mensagem,
 	}
 
 	body, err := json.Marshal(payload)
@@ -100,33 +76,8 @@ func enviarResetViaResendAPI(apiKey, destinatario, codigo string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("Resend retornou status %d", resp.StatusCode)
-	}
-
-	return nil
-}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("erro ao montar corpo da requisição: %v", err)
-	}
-
-	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(body))
-	if err != nil {
-		return fmt.Errorf("erro ao criar requisição: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("erro de conexão com a API do Resend: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("Resend retornou status %d", resp.StatusCode)
+		resposta, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return fmt.Errorf("Resend retornou status %d: %s", resp.StatusCode, string(resposta))
 	}
 
 	return nil

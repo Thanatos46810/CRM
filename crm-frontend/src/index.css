@@ -1,1 +1,279 @@
 @import "tailwindcss";
+
+:root {
+	--fixy-ink: #f3f8fb;
+	--fixy-panel: #ffffff;
+	--fixy-panel-soft: #e8f1f5;
+	--fixy-paper: #172a36;
+	--fixy-muted: #617681;
+	--fixy-line: rgba(27, 99, 125, 0.18);
+	--fixy-brass: #0891b2;
+	--fixy-brass-bright: #06b6d4;
+	--fixy-brass-deep: #0e7490;
+	--fixy-green: #4f765d;
+	--fixy-red: #a65e52;
+}
+
+:root[data-theme='dark'] {
+	--fixy-ink: #071923;
+	--fixy-panel: #0d2532;
+	--fixy-panel-soft: #123342;
+	--fixy-paper: #eafaff;
+	--fixy-muted: #8eacb8;
+	--fixy-line: rgba(34, 211, 238, 0.24);
+	--fixy-brass: #0891b2;
+	--fixy-brass-bright: #22d3ee;
+	--fixy-brass-deep: #0e7490;
+	--fixy-green: #9db8a0;
+	--fixy-red: #d49a8e;
+}
+
+html {
+	background: var(--fixy-ink);
+}
+
+body {
+	min-width: 320px;
+	background:
+		radial-gradient(circle at 88% 0%, rgba(6, 182, 212, 0.16), transparent 25rem),
+		linear-gradient(135deg, #f7fbfd 0%, #eef6f9 52%, #e5f0f4 100%);
+	color: var(--fixy-paper);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+:root[data-theme='dark'] body {
+	background:
+		radial-gradient(circle at 85% 8%, rgba(34, 211, 238, 0.2), transparent 28rem),
+		linear-gradient(135deg, #06141d 0%, #0a202d 52%, #071923 100%);
+}
+
+button,
+input,
+textarea {
+	font-family: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: Georgia, 'Times New Roman', serif;
+	letter-spacing: 0;
+}
+
+button,
+a,
+input,
+textarea {
+	transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+button:hover,
+a:hover {
+	transform: translateY(-1px);
+}
+
+body::selection {
+	background: var(--fixy-brass);
+	color: var(--fixy-ink);
+}
+
+/* Shared Fixy-inspired surfaces and controls. */
+[class*="bg-slate-950"] {
+	background-color: var(--fixy-ink) !important;
+}
+
+[class*="bg-slate-900"] {
+	background-color: var(--fixy-panel) !important;
+}
+
+[class*="bg-slate-800"] {
+	background-color: var(--fixy-panel-soft) !important;
+}
+
+[class*="border-slate-800"],
+[class*="border-slate-700"] {
+	border-color: var(--fixy-line) !important;
+}
+
+[class*="text-slate-100"],
+[class*="text-slate-200"],
+[class*="text-slate-300"],
+[class*="text-white"] {
+	color: var(--fixy-paper) !important;
+}
+
+[class*="text-slate-400"],
+[class*="text-slate-500"],
+[class*="text-slate-600"] {
+	color: var(--fixy-muted) !important;
+}
+
+[class*="text-blue-"],
+[class*="text-purple-"],
+[class*="text-indigo-"],
+[class*="text-amber-"] {
+	color: var(--fixy-brass-bright) !important;
+}
+
+[class*="text-emerald-"] {
+	color: var(--fixy-green) !important;
+}
+
+[class*="text-rose-"],
+[class*="text-pink-"] {
+	color: var(--fixy-red) !important;
+}
+
+[class*="bg-blue-500/10"],
+[class*="bg-blue-600/10"],
+[class*="bg-indigo-"],
+[class*="bg-purple-500/10"],
+[class*="bg-amber-500/10"] {
+	background-color: rgba(164, 124, 60, 0.1) !important;
+}
+
+[class~="bg-blue-600"],
+[class*="bg-blue-500"]:not([class*="/10"]):not([class*="/20"]):not([class*="/30"]),
+[class~="bg-purple-600"],
+[class*="bg-purple-500"]:not([class*="/10"]):not([class*="/20"]):not([class*="/30"]) {
+	background-color: var(--fixy-brass-deep) !important;
+}
+
+[class*="hover:bg-blue-"]:hover,
+[class*="hover:bg-purple-"]:hover,
+[class*="hover:bg-indigo-"]:hover {
+	background-color: var(--fixy-brass-deep) !important;
+}
+
+[class*="bg-rose-500/10"],
+[class*="bg-rose-500/20"],
+[class*="bg-pink-"] {
+	background-color: rgba(164, 94, 83, 0.15) !important;
+}
+
+[class*="bg-emerald-"] {
+	background-color: rgba(128, 157, 133, 0.18) !important;
+}
+
+[class*="border-blue-"],
+[class*="border-indigo-"],
+[class*="border-purple-"],
+[class*="border-amber-"] {
+	border-color: var(--fixy-line) !important;
+}
+
+[class*="border-emerald-"] {
+	border-color: rgba(157, 184, 160, 0.34) !important;
+}
+
+[class*="border-rose-"],
+[class*="border-pink-"] {
+	border-color: rgba(212, 154, 142, 0.38) !important;
+}
+
+[class*="bg-gradient-to-r"] {
+	background-image: linear-gradient(110deg, #0369a1 0%, #0891b2 48%, #22d3ee 100%) !important;
+}
+
+[class*="bg-clip-text"] {
+	background-image: linear-gradient(110deg, #0369a1 0%, #0891b2 48%, #06b6d4 100%) !important;
+	color: transparent !important;
+}
+
+[class*="rounded-2xl"],
+[class*="rounded-3xl"],
+[class*="rounded-xl"],
+[class*="rounded-lg"] {
+	border-radius: 3px !important;
+}
+
+[class*="rounded-full"] {
+	border-radius: 999px !important;
+}
+
+input,
+textarea {
+	border-radius: 2px !important;
+	border-color: var(--fixy-line) !important;
+	background-color: rgba(255, 253, 248, 0.86) !important;
+	color: var(--fixy-paper) !important;
+	box-shadow: 0 1px 1px rgba(67, 61, 49, 0.04);
+}
+
+input::placeholder,
+textarea::placeholder {
+	color: #9d968a;
+}
+
+input:focus,
+textarea:focus {
+	border-color: var(--fixy-brass) !important;
+	box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.16);
+}
+
+header {
+	border-color: var(--fixy-line) !important;
+}
+
+[class*="shadow-"] {
+	box-shadow: 0 14px 35px rgba(15, 66, 89, 0.12) !important;
+}
+
+[class*="min-h-\[520px\]"] {
+	background-color: rgba(255, 253, 248, 0.54) !important;
+}
+
+/* Login keeps the reference's quiet, editorial first impression. */
+body > #root > div.min-h-screen.flex.items-center {
+	position: relative;
+	overflow: hidden;
+	align-items: flex-start;
+	padding-top: 8rem !important;
+	isolation: isolate;
+}
+
+body > #root > div.min-h-screen.flex.items-center::before {
+	content: 'CRM / PIPELINE';
+	position: absolute;
+	top: 2rem;
+	left: 2rem;
+	color: var(--fixy-paper);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 1.5rem;
+	letter-spacing: -0.04em;
+	z-index: 2;
+}
+
+body > #root > div.min-h-screen.flex.items-center::after {
+	content: 'RELACIONAMENTO RESOLVIDO É QUANDO VOCÊ DIZ QUE É';
+	position: absolute;
+	top: 4.2rem;
+	left: 2.1rem;
+	color: var(--fixy-muted);
+	font: 0.56rem/1 Arial, sans-serif;
+	letter-spacing: 0.18em;
+	z-index: 2;
+}
+
+body > #root > div.min-h-screen.flex.items-center > div {
+	position: relative;
+	z-index: 1;
+}
+
+@media (max-width: 640px) {
+	body > #root > div.min-h-screen.flex.items-center {
+		padding-top: 7rem !important;
+	}
+
+	body > #root > div.min-h-screen.flex.items-center::before {
+		top: 1.25rem;
+		left: 1.25rem;
+	}
+
+	body > #root > div.min-h-screen.flex.items-center::after {
+		top: 3.25rem;
+		left: 1.35rem;
+		font-size: 0.45rem;
+	}
+}
